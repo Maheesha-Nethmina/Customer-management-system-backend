@@ -6,10 +6,14 @@ import java.util.List;
 
 @Data
 public class CustomerDTO {
+    private Long id;
     private String name; // Mandatory customer name
     private LocalDate dob; // Customer date of birth
     private String nic; // Unique NIC number
+
     private List<MobileNumberDTO> mobileNumbers; // List of optional numbers
     private List<AddressDTO> addresses; // List of optional addresses
-    private List<Long> familyMemberIds; // Only pass IDs for family members
+
+    private List<Long> familyMemberIds; // Used for receiving data FROM frontend (Save/Update)
+    private List<CustomerDTO> familyMembers; // Used for sending data TO frontend (View)
 }

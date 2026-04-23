@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/customers")
@@ -17,11 +16,15 @@ public class CustomerController {
 
     private final CustomerService customerService;
 
-    // View all customers
+    // UPDATED: View all customers with pagination to prevent memory overload
     @GetMapping("/all")
-    public ResponseEntity<?> getAll() {
+    public ResponseEntity<?> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size
+    ) {
         try {
-            return ResponseEntity.ok(customerService.getAllCustomers());
+            // Uses the new paginated method from CustomerService
+            return ResponseEntity.ok(customerService.getAllCustomersPaginated(page, size));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }

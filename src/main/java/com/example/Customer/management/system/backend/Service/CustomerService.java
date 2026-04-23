@@ -6,6 +6,10 @@ import com.example.Customer.management.system.backend.Repository.*;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort; // <-- NEW IMPORT ADDED HERE
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -78,7 +82,7 @@ public class CustomerService {
         }
     }
 
-    // get all customers
+    // get all customers (Legacy - retrieves everything at once)
     public List<CustomerDTO> getAllCustomers() {
         try {
             return customerRepository.findAll().stream()
@@ -86,6 +90,19 @@ public class CustomerService {
                     .collect(Collectors.toList());
         } catch (Exception e) {
             throw new RuntimeException("Failed to retrieve customers: " + e.getMessage());
+        }
+    }
+
+    // NEW: Get paginated customers (e.g., 50 at a time) - UPDATED TO SHOW LATEST FIRST
+    public Page<CustomerDTO> getAllCustomersPaginated(int page, int size) {
+        try {
+            // <-- THIS LINE WAS UPDATED TO SORT BY ID DESCENDING
+            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
+
+            // Spring Data JPA automatically handles the SQL LIMIT, OFFSET, and ORDER BY
+            return customerRepository.findAll(pageable).map(CustomerMapper::toDTO);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to retrieve paginated customers: " + e.getMessage());
         }
     }
 
