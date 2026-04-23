@@ -31,17 +31,36 @@ public class CustomerService {
             Customer customer = CustomerMapper.toEntity(dto);
 
             // Map addresses and resolve master data (City and Country)
-            List<Address> addresses = dto.getAddresses().stream().map(addrDto -> {
-                Address address = new Address();
-                address.setAddressLine1(addrDto.getAddressLine1());
-                address.setAddressLine2(addrDto.getAddressLine2());
-                address.setCity(cityRepository.findByName(addrDto.getCity()).orElse(null));
-                address.setCountry(countryRepository.findByName(addrDto.getCountry()).orElse(null));
-                address.setCustomer(customer);
-                return address;
-            }).collect(Collectors.toList());
+            if (dto.getAddresses() != null) {
+                List<Address> addresses = dto.getAddresses().stream().map(addrDto -> {
+                    Address address = new Address();
+                    address.setAddressLine1(addrDto.getAddressLine1());
+                    address.setAddressLine2(addrDto.getAddressLine2());
+                    address.setCity(cityRepository.findByName(addrDto.getCity()).orElse(null));
+                    address.setCountry(countryRepository.findByName(addrDto.getCountry()).orElse(null));
+                    address.setCustomer(customer);
+                    return address;
+                }).collect(Collectors.toList());
+                customer.setAddresses(addresses);
+            }
 
-            customer.setAddresses(addresses);
+            // Map mobile numbers
+            if (dto.getMobileNumbers() != null) {
+                List<MobileNumber> mobiles = dto.getMobileNumbers().stream().map(mobDto -> {
+                    MobileNumber mobile = new MobileNumber();
+                    mobile.setNumber(mobDto.getNumber());
+                    mobile.setCustomer(customer);
+                    return mobile;
+                }).collect(Collectors.toList());
+                customer.setMobileNumbers(mobiles);
+            }
+
+            // Map Family Members
+            if (dto.getFamilyMemberIds() != null && !dto.getFamilyMemberIds().isEmpty()) {
+                List<Customer> familyMembers = customerRepository.findAllById(dto.getFamilyMemberIds());
+                customer.setFamilyMembers(familyMembers);
+            }
+
             return CustomerMapper.toDTO(customerRepository.save(customer));
         } catch (Exception e) {
             throw new RuntimeException("Failed to create customer: " + e.getMessage());
@@ -70,7 +89,7 @@ public class CustomerService {
         }
     }
 
-    // method to handle file upload
+    // method to handle file upload (STRICTLY 3 MANDATORY FIELDS ONLY)
     public void processBulkUpload(MultipartFile file) {
         try (InputStream is = file.getInputStream(); Workbook workbook = new XSSFWorkbook(is)) {
             Sheet sheet = workbook.getSheetAt(0);
@@ -81,9 +100,11 @@ public class CustomerService {
 
                 try {
                     CustomerDTO dto = new CustomerDTO();
-                    dto.setName(row.getCell(0).getStringCellValue()); // Map Name from Column 0
-                    dto.setDob(LocalDate.parse(row.getCell(1).getStringCellValue())); // Map DOB from Column 1
-                    dto.setNic(row.getCell(2).getStringCellValue()); // Map NIC from Column 2
+
+                    // Added null checks so blank rows don't crash the upload
+                    if (row.getCell(0) != null) dto.setName(row.getCell(0).getStringCellValue()); // Map Name from Column 0
+                    if (row.getCell(1) != null) dto.setDob(LocalDate.parse(row.getCell(1).getStringCellValue())); // Map DOB from Column 1
+                    if (row.getCell(2) != null) dto.setNic(row.getCell(2).getStringCellValue()); // Map NIC from Column 2
 
                     batch.add(dto);
                 } catch (Exception rowEx) {
@@ -129,6 +150,12 @@ public class CustomerService {
             customer.setName(dto.getName());
             customer.setNic(dto.getNic());
             customer.setDob(dto.getDob());
+
+            // Update Family Members
+            if (dto.getFamilyMemberIds() != null) {
+                List<Customer> familyMembers = customerRepository.findAllById(dto.getFamilyMemberIds());
+                customer.setFamilyMembers(familyMembers);
+            }
 
             return CustomerMapper.toDTO(customerRepository.save(customer));
         } catch (Exception e) {
