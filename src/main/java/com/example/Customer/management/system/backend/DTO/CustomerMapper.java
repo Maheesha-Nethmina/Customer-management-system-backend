@@ -18,7 +18,7 @@ public class CustomerMapper {
     public static CustomerDTO toDTO(Customer entity) {
         CustomerDTO dto = new CustomerDTO();
 
-        // FIXED: Changed 'customer' to 'entity'
+
         dto.setId(entity.getId());
         dto.setName(entity.getName());
         dto.setDob(entity.getDob());

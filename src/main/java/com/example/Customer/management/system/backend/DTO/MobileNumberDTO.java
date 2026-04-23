@@ -4,5 +4,5 @@ import lombok.Data;
 
 @Data
 public class MobileNumberDTO {
-    private String number; // Mobile number value
+    private String number;
 }

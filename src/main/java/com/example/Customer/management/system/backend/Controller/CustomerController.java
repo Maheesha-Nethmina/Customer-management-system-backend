@@ -16,7 +16,7 @@ public class CustomerController {
 
     private final CustomerService customerService;
 
-    // UPDATED: View all customers with pagination to prevent memory overload
+    // View all customers with pagination to prevent memory overload
     @GetMapping("/all")
     public ResponseEntity<?> getAll(
             @RequestParam(defaultValue = "0") int page,

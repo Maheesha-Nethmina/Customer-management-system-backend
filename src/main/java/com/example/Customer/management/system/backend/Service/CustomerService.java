@@ -93,10 +93,9 @@ public class CustomerService {
         }
     }
 
-    // NEW: Get paginated customers (e.g., 50 at a time) - UPDATED TO SHOW LATEST FIRST
+    // Get paginated customers (e.g., 50 at a time)
     public Page<CustomerDTO> getAllCustomersPaginated(int page, int size) {
         try {
-            // <-- THIS LINE WAS UPDATED TO SORT BY ID DESCENDING
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
 
             // Spring Data JPA automatically handles the SQL LIMIT, OFFSET, and ORDER BY
@@ -106,7 +105,7 @@ public class CustomerService {
         }
     }
 
-    // method to handle file upload (STRICTLY 3 MANDATORY FIELDS ONLY)
+    // method to handle file upload
     public void processBulkUpload(MultipartFile file) {
         try (InputStream is = file.getInputStream(); Workbook workbook = new XSSFWorkbook(is)) {
             Sheet sheet = workbook.getSheetAt(0);
