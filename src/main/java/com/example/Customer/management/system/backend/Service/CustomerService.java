@@ -3,13 +3,13 @@ package com.example.Customer.management.system.backend.Service;
 import com.example.Customer.management.system.backend.DTO.*;
 import com.example.Customer.management.system.backend.Entity.*;
 import com.example.Customer.management.system.backend.Repository.*;
+import com.github.pjfanning.xlsx.StreamingReader;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort; // <-- NEW IMPORT ADDED HERE
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -98,16 +98,21 @@ public class CustomerService {
         try {
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
 
-            // Spring Data JPA automatically handles the SQL LIMIT, OFFSET, and ORDER BY
             return customerRepository.findAll(pageable).map(CustomerMapper::toDTO);
         } catch (Exception e) {
             throw new RuntimeException("Failed to retrieve paginated customers: " + e.getMessage());
         }
     }
 
-    // method to handle file upload
+    // Process Bulk Upload using StreamingReader for Massive Files
     public void processBulkUpload(MultipartFile file) {
-        try (InputStream is = file.getInputStream(); Workbook workbook = new XSSFWorkbook(is)) {
+        // Use StreamingReader to keep memory usage tiny, even on 50MB+ files!
+        try (InputStream is = file.getInputStream();
+             Workbook workbook = StreamingReader.builder()
+                     .rowCacheSize(100)    // Keep only 100 rows in memory at a time
+                     .bufferSize(4096)     // Read in chunks of 4KB
+                     .open(is)) {
+
             Sheet sheet = workbook.getSheetAt(0);
             List<CustomerDTO> batch = new ArrayList<>();
 
@@ -124,7 +129,6 @@ public class CustomerService {
 
                     batch.add(dto);
                 } catch (Exception rowEx) {
-                    // Log the error for this specific row, but don't crash the whole upload
                     System.err.println("Skipping invalid row " + row.getRowNum() + ": " + rowEx.getMessage());
                 }
 
