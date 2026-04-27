@@ -4,6 +4,11 @@ Customer Management System (CMS) is a high-performance, full-stack web applicati
 
 ---
 
+## 🔗 Repository Links
+* **Backend Repository:**  https://github.com/Maheesha-Nethmina/Customer-management-system-backend
+* **Frontend Repository:** https://github.com/Maheesha-Nethmina/Customer-management-system-frontend
+
+
 ## ✨ Features
 
 ### ✅ Core Functionalities
